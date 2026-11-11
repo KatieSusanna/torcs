@@ -57,6 +57,7 @@ import socket
 import sys
 import getopt
 import os
+import subprocess
 import time
 PI= 3.14159265359
 
@@ -163,24 +164,35 @@ class Client():
                 self.so.sendto(initmsg.encode(), (self.host, self.port))
             except socket.error as emsg:
                 sys.exit(-1)
-            sockdata= str()
+            sockdata: str = ''
             try:
-                sockdata,addr= self.so.recvfrom(data_size)
-                sockdata = sockdata.decode('utf-8')
+                raw, addr = self.so.recvfrom(data_size)
+                sockdata = raw.decode('utf-8')
             except socket.error as emsg:
                 print("Waiting for server on %d............" % self.port)
                 print("Count Down : " + str(n_fail))
                 if n_fail < 0:
                     print("relaunch torcs")
-                    os.system('pkill torcs')
+                    # Kill any running wtorcs.exe process
+                    subprocess.call(
+                        ['taskkill', '/F', '/IM', 'wtorcs.exe'],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                    )
                     time.sleep(1.0)
-                    if self.vision is False:
-                        os.system('torcs -nofuel -nodamage -nolaptime &')
-                    else:
-                        os.system('torcs -nofuel -nodamage -nolaptime -vision &')
-
-                    time.sleep(1.0)
-                    os.system('sh autostart.sh')
+                    # Path to wtorcs.exe relative to this script's directory
+                    _torcs_exe = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        '..', 'torcs', 'wtorcs.exe'
+                    )
+                    _torcs_exe = os.path.normpath(_torcs_exe)
+                    _args = [_torcs_exe, '-nofuel', '-nodamage', '-nolaptime']
+                    if self.vision is True:
+                        _args.append('-vision')
+                    subprocess.Popen(_args)
+                    time.sleep(3.0)
+                    # Note: autostart.sh (xte keyboard automation) is Linux-only.
+                    # On Windows, start the race manually via Race Runner before
+                    # running this script, or use Race Runner to launch wtorcs.exe.
                     n_fail = 5
                 n_fail -= 1
 
@@ -198,6 +210,7 @@ class Client():
         except getopt.error as why:
             print('getopt error: %s\n%s' % (why, usage))
             sys.exit(-1)
+        opt = ('', '')
         try:
             for opt in opts:
                 if opt[0] == '-h' or opt[0] == '--help':
@@ -239,10 +252,11 @@ class Client():
         sockdata= str()
 
         while True:
+            sockdata = ''
             try:
                 # Receive server data
-                sockdata,addr= self.so.recvfrom(data_size)
-                sockdata = sockdata.decode('utf-8')
+                raw,addr= self.so.recvfrom(data_size)
+                sockdata = raw.decode('utf-8')
             except socket.error as emsg:
                 print('.', end=' ')
                 #print "Waiting for data on %d.............." % self.port
@@ -277,7 +291,7 @@ class Client():
             message = repr(self.R)
             self.so.sendto(message.encode(), (self.host, self.port))
         except socket.error as emsg:
-            print("Error sending to server: %s Message %s" % (emsg[1],str(emsg[0])))
+            print("Error sending to server: %s Message %s" % (emsg.strerror, emsg.errno))
             sys.exit(-1)
         if self.debug: print(self.R.fancyout())
         # Or use this for plain output:
@@ -306,17 +320,7 @@ class ServerState():
             self.d[w[0]]= destringify(w[1:])
 
     def __repr__(self):
-        # Comment the next line for raw output:
         return self.fancyout()
-        # -------------------------------------
-        out= str()
-        for k in sorted(self.d):
-            strout= str(self.d[k])
-            if type(self.d[k]) is list:
-                strlist= [str(i) for i in self.d[k]]
-                strout= ', '.join(strlist)
-            out+= "%s: %s\n" % (k,strout)
-        return out
 
     def fancyout(self):
         '''Specialty output for useful ServerState monitoring.'''
@@ -419,9 +423,9 @@ class ServerState():
                 elif k == 'angle':
                     asyms= [
                           "  !  ", ".|'  ", "./'  ", "_.-  ", ".--  ", "..-  ",
-                          "---  ", ".__  ", "-._  ", "'-.  ", "'\.  ", "'|.  ",
+                          "---  ", ".__  ", "-._  ", "'-.  ", "'\\.  ", "'|.  ",
                           "  |  ", "  .|'", "  ./'", "  .-'", "  _.-", "  __.",
-                          "  ---", "  --.", "  -._", "  -..", "  '\.", "  '|."  ]
+                          "  ---", "  --.", "  -._", "  -..", "  '\\.", "  '|."  ]
                     rad= self.d[k]
                     deg= int(rad*180/PI)
                     symno= int(.5+ (rad+PI) / (PI/12) )
@@ -493,7 +497,6 @@ class DriverAction():
                 out+= ' '.join([str(x) for x in v])
             out+= ')'
         return out
-        return out+'\n'
 
     def fancyout(self):
         '''Specialty output for useful monitoring of bot's effectors.'''

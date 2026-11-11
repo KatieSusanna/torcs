@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE params SYSTEM "params.dtd">
+<!DOCTYPE params SYSTEM "../params.dtd">
 
 
 <params name="Quick Race">
@@ -52,21 +52,6 @@
       <attstr name="module" val="scr_server"/>
     </section>
 
-    <section name="2">
-      <attnum name="idx" val="1"/>
-      <attstr name="module" val="scr_server"/>
-    </section>
-
-    <section name="3">
-      <attnum name="idx" val="2"/>
-      <attstr name="module" val="scr_server"/>
-    </section>
-
-    <section name="4">
-      <attnum name="idx" val="3"/>
-      <attstr name="module" val="scr_server"/>
-    </section>
-
   </section>
 
   <section name="Configuration">
@@ -97,16 +82,6 @@
     <section name="1">
       <attstr name="module" val="scr_server"/>
       <attnum name="idx" val="0"/>
-    </section>
-
-    <section name="2">
-      <attstr name="module" val="scr_server"/>
-      <attnum name="idx" val="2"/>
-    </section>
-
-    <section name="3">
-      <attstr name="module" val="scr_server"/>
-      <attnum name="idx" val="3"/>
     </section>
 
   </section>
