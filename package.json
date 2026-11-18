@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "gym": "^0.0.0-security",
+    "torch": "^0.2.7"
+  }
+}
