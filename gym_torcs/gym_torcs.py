@@ -3,12 +3,63 @@ from gym import spaces
 import numpy as np
 # from os import path
 import snakeoil3_gym as snakeoil3
-import numpy as np
 import copy
 import collections as col
 import os
+import subprocess
+import sys
 import time
 
+
+# ---------------------------------------------------------------------------
+# Windows-compatible process helpers (replace Linux pkill / torcs & / sh xte)
+# ---------------------------------------------------------------------------
+import shutil as _shutil
+
+def _torcs_exe():
+    """Return the TORCS executable name available on PATH (wtorcs or torcs)."""
+    for name in ('wtorcs', 'torcs'):
+        if _shutil.which(name):
+            return name
+    raise FileNotFoundError(
+        "TORCS executable not found on PATH. "
+        "Add the torcs\\ directory to PATH before running. "
+        "See README.md for instructions."
+    )
+
+def _kill_torcs():
+    """Terminate any running TORCS process (cross-platform)."""
+    if sys.platform == 'win32':
+        subprocess.call(
+            ['taskkill', '/F', '/IM', 'wtorcs.exe'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        subprocess.call(
+            ['taskkill', '/F', '/IM', 'torcs.exe'],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    else:
+        subprocess.call(['pkill', 'torcs'], stderr=subprocess.DEVNULL)
+
+def _launch_torcs(*args):
+    """Launch TORCS in the background (non-blocking)."""
+    exe = _torcs_exe()
+    cmd = [exe] + list(args)
+    subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+def _autostart():
+    """Run the menu-navigation automation script (Windows .bat or Linux .sh)."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    if sys.platform == 'win32':
+        script = os.path.join(script_dir, 'autostart.bat')
+        subprocess.call(['cmd', '/c', script])
+    else:
+        script = os.path.join(script_dir, 'autostart.sh')
+        subprocess.call(['sh', script])
+
+# ---------------------------------------------------------------------------
 
 class TorcsEnv:
     terminal_judge_start = 500  # Speed limit is applied after this step
@@ -27,14 +78,14 @@ class TorcsEnv:
         self.initial_run = True
 
         ##print("launch torcs")
-        os.system('pkill torcs')
+        _kill_torcs()
         time.sleep(0.5)
         if self.vision is True:
-            os.system('torcs -nofuel -nodamage -nolaptime  -vision &')
+            _launch_torcs('-nofuel', '-nodamage', '-nolaptime', '-vision')
         else:
-            os.system('torcs  -nofuel -nodamage -nolaptime &')
+            _launch_torcs('-nofuel', '-nodamage', '-nolaptime')
         time.sleep(0.5)
-        os.system('sh autostart.sh')
+        _autostart()
         time.sleep(0.5)
 
         """
@@ -195,21 +246,21 @@ class TorcsEnv:
         return self.get_obs()
 
     def end(self):
-        os.system('pkill torcs')
+        _kill_torcs()
 
     def get_obs(self):
         return self.observation
 
     def reset_torcs(self):
        #print("relaunch torcs")
-        os.system('pkill torcs')
+        _kill_torcs()
         time.sleep(0.5)
         if self.vision is True:
-            os.system('torcs -nofuel -nodamage -nolaptime -vision &')
+            _launch_torcs('-nofuel', '-nodamage', '-nolaptime', '-vision')
         else:
-            os.system('torcs -nofuel -nodamage -nolaptime &')
+            _launch_torcs('-nofuel', '-nodamage', '-nolaptime')
         time.sleep(0.5)
-        os.system('sh autostart.sh')
+        _autostart()
         time.sleep(0.5)
 
     def agent_to_torcs(self, u):
