@@ -60,7 +60,7 @@
   </section>
 
   <section name="Display Mode">
-    <attnum name="number of screens" val="3"/>
+    <attnum name="number of screens" val="1"/>
     <section name="Player">
       <attnum name="camera" val="0"/>
       <attnum name="camera head list" val="0"/>
@@ -76,7 +76,10 @@
       <attnum name="debug info" val="0"/>
       <attnum name="enable mirror" val="1"/>
       <attnum name="arcade" val="1"/>
-      <attstr name="current driver" val="university one"/>
+      <attstr name="current driver" val="uni 0"/>
+      <attnum name="camera" val="0"/>
+      <attnum name="camera head list" val="0"/>
+      <attnum name="fovy-1-3" val="40"/>
     </section>
 
     <section name="1">
@@ -88,10 +91,16 @@
       <attnum name="leader board" val="1"/>
       <attnum name="G graph" val="0"/>
       <attnum name="debug info" val="1"/>
+      <attstr name="current driver" val="uni 0"/>
+      <attnum name="camera" val="0"/>
+      <attnum name="camera head list" val="1"/>
     </section>
 
     <section name="2">
       <attnum name="fovy-9-0" val="9"/>
+      <attstr name="current driver" val="uni 0"/>
+      <attnum name="camera" val="2"/>
+      <attnum name="camera head list" val="2"/>
     </section>
 
     <section name="3">
